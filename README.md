@@ -18,3 +18,15 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 * [Kaggle 以图搜图数据集](https://www.kaggle.com/competitions/landmark-retrieval-2019/overview) -
   用于本项目中以图搜图功能实现。
 
+## Development Process 开发进度
+
+### 后端：搜索引擎
+
+- [ ] 基本功能
+    - [ ] 文字-图片检索
+- [ ] 辅助功能
+    - [ ] 尺寸筛选
+    - [ ] 色调筛选
+- [ ] 拓展功能
+    - [ ] 图片-图片检索
+    - [ ] 相似推荐
