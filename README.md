@@ -23,10 +23,11 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 ### 后端：搜索引擎
 
 - [ ] 基本功能
-    - [ ] 文字-图片检索
+    - [x] 文字-图片检索 (22/04/14)
 - [ ] 辅助功能
     - [ ] 尺寸筛选
     - [ ] 色调筛选
+    - [ ] 标签筛选
 - [ ] 拓展功能
     - [ ] 图片-图片检索
     - [ ] 相似推荐
