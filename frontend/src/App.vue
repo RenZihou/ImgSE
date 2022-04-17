@@ -17,7 +17,26 @@
                   </q-item>
 
                   <q-item clickable v-ripple>
-                    <q-item-section>size Filter</q-item-section>
+                    <q-item-section>Size Filter</q-item-section>
+                    <q-menu>
+                      <q-list bordered separator>
+                        <q-item>
+                          <q-checkbox v-model="pixels" val="xs" label="extra small" size="xs"/>
+                        </q-item>
+                        <q-item>
+                          <q-checkbox v-model="pixels" val="s" label="small" size="xs"/>
+                        </q-item>
+                        <q-item>
+                          <q-checkbox v-model="pixels" val="m" label="medium" size="xs"/>
+                        </q-item>
+                        <q-item>
+                          <q-checkbox v-model="pixels" val="l" label="large" size="xs"/>
+                        </q-item>
+                        <q-item>
+                          <q-checkbox v-model="pixels" val="xl" label="extra large" size="xs"/>
+                        </q-item>
+                      </q-list>
+                    </q-menu>
                   </q-item>
                 </q-list>
               </q-menu>
@@ -77,6 +96,7 @@
 
 <script>
 import axios from 'axios';
+import { useQuasar } from 'quasar'
 
 export default {
   name: 'MainLayout',
@@ -84,13 +104,16 @@ export default {
   methods: {
     search() {
       const path = process.env.VUE_APP_BACKEND_URL + "/search";
-      axios.get(path, {params: {query: this.query, tags: this.tags.join(",")}})
+      axios.get(path, {params: {query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(",")}})
           .then(resp => {
             if (resp.status === 200) {
               Array.from(resp.data.data).forEach(each => {
                 each.expanded = false;
               });
               this.gallery = resp.data.data;
+              if (this.gallery.length === 0) {
+                this.noResultAlert();
+              }
             } else {
               console.log(resp.status);
             }
@@ -128,12 +151,22 @@ export default {
       query: "",
       new_tag: "",
       tags: [],
+      pixels: [],
       gallery: [],
       add_tag: false,
       tag_filter_desc: "",
+      size_filter_desc: "",
     }
   },
 
+  setup() {
+    const $q = useQuasar();
+    return {
+      noResultAlert() {
+        $q.notify({message: "No Image Found", position: "center", color: "negative", icon: "error", timeout: 2000})
+      }
+    }
+  }
 }
 </script>
 

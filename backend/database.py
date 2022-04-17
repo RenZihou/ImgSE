@@ -17,7 +17,7 @@ class ImageDB(object):
     def __init__(self, db: str = DATABASE_PATH):
         self.conn = sqlite3.connect(path.join(path.dirname(__file__), db))
         self.cur = self.conn.cursor()
-        self.columns = ('image_id', 'desc', 'tags')
+        self.columns = ('image_id', 'desc', 'tags', 'pixels')
 
     def __enter__(self):
         return self
@@ -37,7 +37,11 @@ class ImageDB(object):
         return None
 
     def set_desc(self, image_id: str, desc: str):
-        """set image desc by id"""
+        """
+        set image desc by id
+        :param image_id: image id
+        :param desc: description text
+        """
         if self.cur.execute('SELECT * FROM info WHERE image_id = ?', (image_id,)).fetchone():
             self.cur.execute('UPDATE info SET desc = ? WHERE image_id = ?', (desc, image_id))
         else:
@@ -58,3 +62,14 @@ class ImageDB(object):
         else:
             self.cur.execute('INSERT INTO info(image_id, tags) VALUES (?, ?)',
                              (image_id, json.dumps(tags)))
+
+    def set_pixels(self, image_id: str, size: int):
+        """
+        set image pixels by id
+        :param image_id: image id
+        :param size: image pixel size
+        """
+        if self.cur.execute('SELECT * FROM info WHERE image_id = ?', (image_id,)).fetchone():
+            self.cur.execute('UPDATE info SET pixels = ? WHERE image_id = ?', (size, image_id))
+        else:
+            self.cur.execute('INSERT INTO info(image_id, pixels) VALUES (?, ?)', (image_id, size))

@@ -4,10 +4,12 @@
 
 import json
 from collections import defaultdict
+from os import path, listdir
 
 from index import IndexEngine, BM25Engine
 from processor import process_text
 from database import ImageDB
+from PIL import Image
 
 from settings import BM25_PATH, TAG_INDEX_PATH
 
@@ -23,7 +25,7 @@ def build_text(doc_path: str):
     bm25.parse_corpus().save(BM25_PATH)
 
 
-def build_tag_index(tag_label_path: str, tag_desc_path: str):
+def build_tag(tag_label_path: str, tag_desc_path: str):
     """build tag index from single file"""
     alias_map = {}
     tag_map = defaultdict(list)
@@ -43,6 +45,15 @@ def build_tag_index(tag_label_path: str, tag_desc_path: str):
     index.save(TAG_INDEX_PATH)
 
 
+def build_image(image_path: str):
+    """save image info to database"""
+    with ImageDB() as db:
+        for image_filename in listdir(image_path):
+            width, height = Image.open(path.join(image_path, image_filename)).size
+            db.set_pixels(image_filename[:-4], width * height)
+
+
 if __name__ == '__main__':
-    build_text('D:/storage/meta/text-label.jsonl')
-    build_tag_index('D:/storage/meta/class-label.csv', 'D:/storage/meta/class-descriptions.csv')
+    # build_text('D:/storage/meta/text-label.jsonl')
+    # build_tag('D:/storage/meta/class-label.csv', 'D:/storage/meta/class-descriptions.csv')
+    build_image('D:/storage/images')
