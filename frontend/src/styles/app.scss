@@ -1,9 +1,14 @@
+.main {
+  text-align: center;
+}
+
 .search-bar {
   height: 50px;
   display: block;
   margin-top: 75px;
   margin-left: auto;
   margin-right: auto;
+  text-align: center;
 }
 
 .search-input {
@@ -15,9 +20,18 @@
 .search-result {
   width: 80%;
   margin: 0 auto;
+  padding-top: 60px;
 }
 
 .image-card {
   width: 100%;
-  max-width: 350px;
+  max-width: 300px;
+}
+
+.image-tag {
+  text-align: left;
+}
+
+.image-desc {
+  color: darkgrey;
 }
