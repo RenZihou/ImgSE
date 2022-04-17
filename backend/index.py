@@ -10,17 +10,13 @@ from rank_bm25 import BM25Okapi
 
 class IndexEngine:
     """(inverted) index engine"""
-    def __init__(self, alias_map: dict = None):
+    def __init__(self):
         self.index = defaultdict(set)
-        if alias_map is None:
-            self.alias_map = lambda x: x
-        else:
-            self.alias_map = lambda x: alias_map.get(x, default=None) or x
 
     def add_doc(self, doc_id, doc_words):
         """add a new document"""
         for word in doc_words:
-            self.index[self.alias_map(word)].add(doc_id)
+            self.index[word].add(doc_id)
 
     def get(self, word: str):
         """get the documents that contain the word"""

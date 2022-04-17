@@ -3,6 +3,7 @@
 # @Author: RenZihou
 
 import json
+from collections import defaultdict
 
 from index import IndexEngine, BM25Engine
 from processor import process_text
@@ -18,22 +19,27 @@ def build_text(doc_path: str):
         for line in f:
             data = json.loads(line)
             bm25.add_doc(data['image_id'], process_text(data['caption']))
-            db.set_by_id(data['image_id'], desc=data['caption'])
+            db.set_desc(data['image_id'], desc=data['caption'])
     bm25.parse_corpus().save(BM25_PATH)
 
 
 def build_tag_index(tag_label_path: str, tag_desc_path: str):
     """build tag index from single file"""
     alias_map = {}
+    tag_map = defaultdict(list)
     with open(tag_desc_path, 'r', encoding='utf-8') as f:
         for line in f:
             alias, tag = line.strip().split(',')
             alias_map[alias] = tag
-    index = IndexEngine(alias_map)
     with open(tag_label_path, 'r', encoding='utf-8') as f:
         for line in f:
             image_id, alias = line.strip().split(',')
-            index.add_doc(image_id, (alias,))
+            tag_map[image_id].append(alias_map[alias])
+    index = IndexEngine()
+    with ImageDB() as db:
+        for image_id, tags in tag_map.items():
+            db.set_tags(image_id, tags=tags)
+            index.add_doc(image_id, tags)
     index.save(TAG_INDEX_PATH)
 
 
