@@ -16,14 +16,14 @@ se = SearchEngine(BM25_PATH, TAG_INDEX_PATH)
 
 
 @app.get('/search')
-async def search(query: str, tag: str = None):
+async def search(query: str = '', tags: str = None):
     """
     search by text query
     :param query: query string
-    :param tag: tag string
+    :param tags: tag string
     :return:
     """
-    image_ids = se.search(query, tags=tag.split('+') if tag else None)
+    image_ids = se.search(query, tags=tags.replace('+', ' ').split(',') if tags else None)
     result = []
     with ImageDB() as db:
         for image_id in image_ids:

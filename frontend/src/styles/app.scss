@@ -17,6 +17,11 @@
   position: relative;
 }
 
+.search-tag {
+  text-align: left;
+  padding: 10px;
+}
+
 .search-result {
   width: 80%;
   margin: 0 auto;
@@ -34,4 +39,8 @@
 
 .image-desc {
   color: darkgrey;
+}
+
+.tag-card {
+  min-width: 350px;
 }
