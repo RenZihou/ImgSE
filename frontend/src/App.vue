@@ -47,28 +47,30 @@
       </q-field>
     </div>
 
-    <div class="row items-start justify-around q-gutter-y-xl search-result">
-      <q-card v-for="(g, k) in gallery" :key="k" class="image-card">
-        <img :src="parseImgUrl(g.image_id)" alt="">
+    <q-infinite-scroll @load="loadMore" :disable="continue_from === -1">
+      <div class="row items-start justify-around q-gutter-y-xl search-result">
+        <q-card v-for="(g, k) in gallery" :key="k" class="image-card">
+          <img :src="parseImgUrl(g.image_id)" alt="">
 
-        <q-card-section class="q-pa-s q-gutter-xs image-tag">
-          <q-badge outline color="primary" v-for="t in g.tags" :key="t" :label="t"/>
-        </q-card-section>
+          <q-card-section class="q-pa-s q-gutter-xs image-tag">
+            <q-badge outline color="primary" v-for="t in g.tags" :key="t" :label="t"/>
+          </q-card-section>
 
-        <q-card-actions>
-          <q-space/>
-          <q-btn flat dense :icon="g.expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'" color="grey"
-                 @click="g.expanded = !g.expanded"/>
-        </q-card-actions>
+          <q-card-actions>
+            <q-space/>
+            <q-btn flat dense :icon="g.expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'" color="grey"
+                   @click="g.expanded = !g.expanded"/>
+          </q-card-actions>
 
-        <q-slide-transition>
-          <div v-show="g.expanded">
-            <q-separator/>
-            <q-card-section class="image-desc">{{ g.desc }}</q-card-section>
-          </div>
-        </q-slide-transition>
-      </q-card>
-    </div>
+          <q-slide-transition>
+            <div v-show="g.expanded">
+              <q-separator/>
+              <q-card-section class="image-desc">{{ g.desc }}</q-card-section>
+            </div>
+          </q-slide-transition>
+        </q-card>
+      </div>
+    </q-infinite-scroll>
 
     <q-dialog v-model="add_tag">
       <q-card class="tag-card">
@@ -96,7 +98,7 @@
 
 <script>
 import axios from 'axios';
-import { useQuasar } from 'quasar'
+import {useQuasar} from 'quasar'
 
 export default {
   name: 'MainLayout',
@@ -111,16 +113,53 @@ export default {
                 each.expanded = false;
               });
               this.gallery = resp.data.data;
+              this.continue_from = resp.data.continue_from;
               if (this.gallery.length === 0) {
                 this.noResultAlert();
+                this.continue_from = -1;
               }
             } else {
               console.log(resp.status);
+              this.continue_from = -1;
             }
           })
           .catch(err => {
             console.log(err);
+            this.continue_from = -1;
           });
+    },
+    loadMore(index, done) {
+      if (this.continue_from === -1) {
+        done();
+        return;
+      }
+      const path = process.env.VUE_APP_BACKEND_URL + '/search';
+      axios.get(path, {
+        params: {
+          query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(","),
+          continue_from: this.continue_from
+        }
+      })
+          .then(resp => {
+            if (resp.status === 200) {
+              Array.from(resp.data.data).forEach(each => {
+                each.expanded = false;
+              });
+              this.gallery.push(...resp.data.data);
+              this.continue_from = resp.data.continue_from;
+              if (this.gallery.length === 0) {
+                this.noResultAlert();
+                this.continue_from = -1;
+              }
+            } else {
+              console.log(resp.status);
+              this.continue_from = -1;
+            }
+          }).catch(err => {
+        console.log(err);
+        this.continue_from = -1;
+      });
+      done();
     },
     parseImgUrl(image_id) {
       return process.env.VUE_APP_BACKEND_URL + "/image/" + image_id;
@@ -156,6 +195,7 @@ export default {
       add_tag: false,
       tag_filter_desc: "",
       size_filter_desc: "",
+      continue_from: -1,
     }
   },
 
@@ -163,7 +203,7 @@ export default {
     const $q = useQuasar();
     return {
       noResultAlert() {
-        $q.notify({message: "No Image Found", position: "center", color: "negative", icon: "error", timeout: 2000})
+        $q.notify({message: "No Image Found", position: "center", color: "negative", icon: "error", timeout: 2000});
       }
     }
   }
