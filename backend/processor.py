@@ -20,6 +20,22 @@ STOP_WORDS = {
     '*', '(', ')', '+', '=', '{', '}', '[', ']', '<', '>', '~', '`',
 }
 
+# credit: https://www.rapidtables.com/web/color/RGB_Color.html
+COLORS = {
+    'red': (244, 67, 54),
+    'orange': (255, 152, 0),
+    'yellow': (255, 235, 59),
+    'green': (76, 175, 80),
+    'teal': (0, 150, 136),
+    'blue': (63, 81, 181),
+    'purple': (156, 39, 176),
+    'pink': (233, 30, 99),
+    'white': (255, 255, 255),
+    'grey': (158, 158, 158),
+    'black': (0, 0, 0),
+    'brown': (121, 85, 72),
+}
+
 
 def process_text(text: str) -> list:
     """
@@ -31,3 +47,21 @@ def process_text(text: str) -> list:
     """
     return list(filter(lambda w: w not in STOP_WORDS,
                        map(lambda w: w.lower(), text.split())))
+
+
+def process_image(image) -> tuple:
+    """
+    1. find pixels number
+    2. find dominant color and classify it
+    :param image: PIL.Image object
+    :return: (pixels, color)
+    """
+    w, h = image.size
+    color_rgb = image.convert('RGB').resize((1, 1), resample=0).getpixel((0, 0))
+    distance = {k: sum(map(lambda x: abs(x[0] - x[1]), zip(color_rgb, v)))
+                for k, v in COLORS.items()}
+    color = min(
+        distance,
+        key=distance.get
+    )
+    return w * h, color

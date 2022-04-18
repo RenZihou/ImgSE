@@ -8,17 +8,26 @@
             <q-btn flat icon="add">
               <q-menu>
                 <q-list bordered separator>
-                  <q-item clickable v-ripple @click="add_tag = true">
+                  <q-item clickable v-ripple @click="tag_filter_show = true">
                     <q-item-section>Tag Filter {{ tag_filter_desc }}</q-item-section>
                   </q-item>
 
                   <q-item clickable v-ripple>
                     <q-item-section>Color Filter</q-item-section>
+                    <q-menu anchor="top left" self="top right">
+                      <q-color v-model="color_hex" no-header-tabs no-footer default-view="palette"
+                               :palette="['#f44336', '#ff9800', '#ffeb3b', '#4caf50',
+                                 '#00bcd4', '#2196f3', '#9c27b0', '#e91e63',
+                                 '#ffffff', '#9e9e9e', '#000000', '#5d4037']"/>
+                      <q-item clickable @click="color_hex = ''">
+                        <q-item-section>Disable Color Filter</q-item-section>
+                      </q-item>
+                    </q-menu>
                   </q-item>
 
                   <q-item clickable v-ripple>
                     <q-item-section>Size Filter</q-item-section>
-                    <q-menu>
+                    <q-menu anchor="top left" self="top right">
                       <q-list bordered separator>
                         <q-item>
                           <q-checkbox v-model="pixels" val="xs" label="extra small" size="xs"/>
@@ -70,9 +79,14 @@
           </q-slide-transition>
         </q-card>
       </div>
+      <template v-slot:loading>
+        <div class="row justify-center q-my-md">
+          <q-spinner-dots color="primary" size="40px" />
+        </div>
+      </template>
     </q-infinite-scroll>
 
-    <q-dialog v-model="add_tag">
+    <q-dialog v-model="tag_filter_show">
       <q-card class="tag-card">
         <q-card-section>
           <div class="text-h6">Tag Filter</div>
@@ -100,23 +114,35 @@
 import axios from 'axios';
 import {useQuasar} from 'quasar'
 
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  })
+}
+
 export default {
   name: 'MainLayout',
 
   methods: {
     search() {
       const path = process.env.VUE_APP_BACKEND_URL + "/search";
-      axios.get(path, {params: {query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(",")}})
-          .then(resp => {
+      axios.get(path, {
+        params: {
+          query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(","), color: this.color
+        }
+      })
+          .then(async resp => {
             if (resp.status === 200) {
               Array.from(resp.data.data).forEach(each => {
                 each.expanded = false;
               });
               this.gallery = resp.data.data;
-              this.continue_from = resp.data.continue_from;
               if (this.gallery.length === 0) {
                 this.noResultAlert();
                 this.continue_from = -1;
+              } else {
+                await sleep(2000);  // wait for render to avoid immediate "load more"
+                this.continue_from = resp.data.continue_from;
               }
             } else {
               console.log(resp.status);
@@ -133,22 +159,24 @@ export default {
         done();
         return;
       }
+      const continue_from = this.continue_from;
+      this.continue_from = -1;
       const path = process.env.VUE_APP_BACKEND_URL + '/search';
       axios.get(path, {
         params: {
-          query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(","),
-          continue_from: this.continue_from
+          query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(","), color: this.color,
+          continue_from: continue_from
         }
       })
-          .then(resp => {
+          .then(async resp => {
             if (resp.status === 200) {
               Array.from(resp.data.data).forEach(each => {
                 each.expanded = false;
               });
               this.gallery.push(...resp.data.data);
+              await sleep(2000);  // wait for render to avoid immediate "load more"
               this.continue_from = resp.data.continue_from;
-              if (this.gallery.length === 0) {
-                this.noResultAlert();
+              if (resp.data.data.length === 0) {
                 this.continue_from = -1;
               }
             } else {
@@ -185,14 +213,27 @@ export default {
     }
   },
 
+  watch: {
+    "color_hex": {
+      handler(color_hex) {
+        this.color = {
+          "#f44336": "red", "#ff9800": "orange", "#ffeb3b": "yellow", "#4caf50": "green",
+          "#00bcd4": "teal", "#2196f3": "blue", "#9c27b0": "purple", "#e91e63": "pink",
+          "#ffffff": "white", "#9e9e9e": "grey", "#000000": "black", "#5d4037": "brown"
+        }[color_hex];
+      }
+    }
+  },
   data() {
     return {
       query: "",
       new_tag: "",
       tags: [],
       pixels: [],
+      color_hex: "",
+      color: "",
       gallery: [],
-      add_tag: false,
+      tag_filter_show: false,
       tag_filter_desc: "",
       size_filter_desc: "",
       continue_from: -1,

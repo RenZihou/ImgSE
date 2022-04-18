@@ -20,13 +20,23 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 
 ## Change Log 更新日志
 
+### v0.4
+
+**Add**
+
+* 后端：色调筛选功能、继续加载
+* 前端：色调筛选、无限滚动
+
+**Optimize**
+
+* 后端：搜索功能优化
+
 ### v0.3
 
 **Add**
 
 * 后端：大小（像素数）筛选功能
-* 前端：大小筛选
-* 前端：未找到图片的警告
+* 前端：大小筛选、未找到图片的警告
 
 ### v0.2
 
@@ -52,9 +62,9 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 
 - [x] 基本功能
     - [x] 文字-图片检索 (22/04/14)
-- [ ] 辅助功能
+- [x] 辅助功能
     - [x] 尺寸筛选 (22/04/17)
-    - [ ] 色调筛选
+    - [x] 色调筛选 (22/04/18)
     - [x] 标签筛选 (22/04/17)
 - [ ] 拓展功能
     - [ ] 图片-图片检索

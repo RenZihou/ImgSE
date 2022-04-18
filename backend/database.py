@@ -17,7 +17,7 @@ class ImageDB(object):
     def __init__(self, db: str = DATABASE_PATH):
         self.conn = sqlite3.connect(path.join(path.dirname(__file__), db))
         self.cur = self.conn.cursor()
-        self.columns = ('image_id', 'desc', 'tags', 'pixels')
+        self.columns = ('image_id', 'desc', 'tags', 'pixels', 'color')
 
     def __enter__(self):
         return self
@@ -73,3 +73,15 @@ class ImageDB(object):
             self.cur.execute('UPDATE info SET pixels = ? WHERE image_id = ?', (size, image_id))
         else:
             self.cur.execute('INSERT INTO info(image_id, pixels) VALUES (?, ?)', (image_id, size))
+
+    def set_color(self, image_id: str, color: str):
+        """
+        set image color by id
+        :param image_id: image id
+        :param color: image dominant color name
+        :return:
+        """
+        if self.cur.execute('SELECT * FROM info WHERE image_id = ?', (image_id,)).fetchone():
+            self.cur.execute('UPDATE info SET color = ? WHERE image_id = ?', (color, image_id))
+        else:
+            self.cur.execute('INSERT INTO info(image_id, color) VALUES (?, ?)', (image_id, color))

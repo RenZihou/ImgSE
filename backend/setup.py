@@ -7,7 +7,7 @@ from collections import defaultdict
 from os import path, listdir
 
 from index import IndexEngine, BM25Engine
-from processor import process_text
+from processor import process_text, process_image
 from database import ImageDB
 from PIL import Image
 
@@ -49,8 +49,10 @@ def build_image(image_path: str):
     """save image info to database"""
     with ImageDB() as db:
         for image_filename in listdir(image_path):
-            width, height = Image.open(path.join(image_path, image_filename)).size
-            db.set_pixels(image_filename[:-4], width * height)
+            image = Image.open(path.join(image_path, image_filename))
+            pixels, color = process_image(image)
+            db.set_pixels(image_filename[:-4], pixels)  # add info of pixel size
+            db.set_color(image_filename[:-4], color)  # add info of dominant color
 
 
 if __name__ == '__main__':

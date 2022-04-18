@@ -8,7 +8,7 @@ import dill as pickle
 
 from database import ImageDB
 from processor import process_text
-from settings import IMAGE_PIXELS_THRESHOLD
+from settings import IMAGE_PIXELS_THRESHOLD, MAX_RESULT
 
 
 class SearchEngine:
@@ -20,13 +20,14 @@ class SearchEngine:
             self.tag_index = pickle.load(ti)
 
     def search(self, query: str, /,
-               tags: Optional[list] = None, pixels: Optional[list] = None,
+               tags: Optional[list] = None, pixels: Optional[list] = None, color: str = '',
                n: int = 20, continue_from: int = 0) -> Tuple[list, int]:
         """
         search query
         :param query: query string
         :param tags: tag list
         :param pixels: pixels size list
+        :param color: color name
         :param n: number of results
         :param continue_from: continue from which bm25 result index
         :return: list of image_id
@@ -38,12 +39,12 @@ class SearchEngine:
             return [], 0
         if query in self.tag_index.index and query not in tags:
             tags.append(query)
-        results = self.bm25.get(words, n=-1)[continue_from:]
-        abstracts, count = self._abstract(results, tags=tags, pixels=pixels, n=n)
+        results = self.bm25.get(words, n=MAX_RESULT)[continue_from:]
+        abstracts, count = self._abstract(results, tags=tags, pixels=pixels, color=color, n=n)
         return abstracts, count + continue_from
 
     def _abstract(self, results: list, /,
-                  tags: Optional[list] = None, pixels: Optional[list] = None,
+                  tags: Optional[list] = None, pixels: Optional[list] = None, color: str = '',
                   n: int = 20) -> Tuple[list, int]:
         """
         generate abstract from result image_id list
@@ -57,15 +58,16 @@ class SearchEngine:
         valid = 0
         with ImageDB() as db:
             for image_id in results:
-                valid += 1
+                count += 1
                 if tag_filter and image_id not in tag_filter:
                     continue
                 info = db.get_by_id(image_id)
                 if all((info is not None,
-                        self._meet_pixels_threshold(info, pixels),)):
+                        self._meet_pixels_threshold(info, pixels),
+                        not color or info['color'] == color)):
                     abstracts.append(info)
-                    count += 1
-                    if count >= n:
+                    valid += 1
+                    if valid >= n:
                         break
         return abstracts, count
 
