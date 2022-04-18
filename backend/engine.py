@@ -6,13 +6,14 @@ from typing import Optional
 
 import dill as pickle
 
-from processor import process_text
 from database import ImageDB
+from processor import process_text
 from settings import IMAGE_PIXELS_THRESHOLD
 
 
 class SearchEngine:
     """search engine"""
+
     def __init__(self, bm25_pkl: str, tag_index_pkl: str):
         with open(bm25_pkl, 'rb') as bm25, open(tag_index_pkl, 'rb') as ti:
             self.bm25 = pickle.load(bm25)
@@ -36,24 +37,30 @@ class SearchEngine:
         if query in self.tag_index.index and query not in tags:
             tags.append(query)
         results = self.bm25.get(words, n=-1)
-        return self._abstract(results, tags=tags, pixels=pixels)[:n]
+        return self._abstract(results, tags=tags, pixels=pixels, n=n)
 
     def _abstract(self, results: list, /,
-                  tags: Optional[list] = None, pixels: Optional[list] = None) -> list:
+                  tags: Optional[list] = None, pixels: Optional[list] = None, n: int = 20) -> list:
         """
         generate abstract from result image_id list
         :param results: image id list
         :return: abstract result
         """
-        if tags:
-            tag_filter = set.intersection(*[set(self.tag_index.get(tag)) for tag in tags])
-            results = [r for r in results if r in tag_filter]
+        tag_filter = set.intersection(*[set(self.tag_index.get(tag)) for tag in tags])\
+            if tags else None
         abstracts = []
+        counter = 0
         with ImageDB() as db:
             for image_id in results:
+                if tag_filter and image_id not in tag_filter:
+                    continue
                 info = db.get_by_id(image_id)
-                if info is not None and self._meet_pixels_threshold(info, pixels):
+                if all((info is not None,
+                        self._meet_pixels_threshold(info, pixels),)):
                     abstracts.append(info)
+                    counter += 1
+                    if counter >= n:
+                        break
         return abstracts
 
     @staticmethod
