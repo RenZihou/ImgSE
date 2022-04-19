@@ -78,6 +78,9 @@
 
           <q-card-actions>
             <q-space/>
+            <q-btn flat dense icon="saved_search" color="grey" @click="searchByImage(g.image_id)">
+              <q-tooltip>search similar</q-tooltip>
+            </q-btn>
             <q-btn flat dense :icon="g.expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'" color="grey"
                    @click="g.expanded = !g.expanded">
               <q-tooltip> {{ g.expanded ? "hide description" : "show description" }}</q-tooltip>
@@ -160,22 +163,15 @@ export default {
                 await sleep(2000);  // wait for render to avoid immediate "load more"
                 this.continue_from = resp.data.continue_from;
               }
-            } else {
-              console.log(resp.status);
             }
           })
-          .catch(err => {
-            console.log(err);
-          });
     },
-    searchByImage() {
-      if (this.file === null) return;
-      this.$refs.query_input.blur();
+    searchByImage(query) {
       this.query = '';
       this.continue_from = -1;
       const path = process.env.VUE_APP_BACKEND_URL + '/search';
       const form_data = new FormData();
-      form_data.append('query', this.file);
+      form_data.append('query', query);
       axios.post(path, form_data)
           .then(resp => {
                 if (resp.status === 200) {
@@ -183,12 +179,10 @@ export default {
                     each.expanded = false;
                   });
                   this.gallery = resp.data.data;
+                  window.scrollTo(0, 0);
                 }
               }
           )
-          .catch(err => {
-            console.log(err);
-          })
     },
     loadMore(index, done) {
       if (this.continue_from === -1) {
@@ -211,19 +205,12 @@ export default {
               });
               this.gallery.push(...resp.data.data);
               await sleep(2000);  // wait for render to avoid immediate "load more"
-              this.continue_from = resp.data.continue_from;
-              if (resp.data.data.length === 0) {
-                this.continue_from = -1;
+              if (resp.data.data.length >= 0) {
+                this.continue_from = resp.data.continue_from;
               }
-            } else {
-              console.log(resp.status);
-              this.continue_from = -1;
             }
-          }).catch(err => {
-        console.log(err);
-        this.continue_from = -1;
-      });
-      done();
+            done();
+          })
     },
     parseImgUrl(image_id) {
       return process.env.VUE_APP_BACKEND_URL + "/image/" + image_id;
@@ -251,17 +238,19 @@ export default {
 
   watch: {
     "color_hex": {
-      handler(color_hex) {
+      handler() {
         this.color = {
           "#f44336": "red", "#ff9800": "orange", "#ffeb3b": "yellow", "#4caf50": "green",
           "#00bcd4": "teal", "#2196f3": "blue", "#9c27b0": "purple", "#e91e63": "pink",
           "#ffffff": "white", "#9e9e9e": "grey", "#000000": "black", "#5d4037": "brown"
-        }[color_hex];
+        }[this.color_hex];
       }
     },
     "file": {
       handler() {
-        this.searchByImage();
+        if (this.file === null) return;
+        this.$refs.query_input.blur();
+        this.searchByImage(this.file);
       }
     }
   },

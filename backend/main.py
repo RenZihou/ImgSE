@@ -3,8 +3,9 @@
 # @Author: RenZihou
 
 from os import path
+from typing import Union
 
-from fastapi import FastAPI, Request, UploadFile
+from fastapi import FastAPI, Request, UploadFile, Form
 from fastapi.responses import FileResponse
 
 from engine import TextSearchEngine, ImageSearchEngine
@@ -36,13 +37,14 @@ async def search(query: str = '', tags: str = '', pixels: str = '', color: str =
 
 
 @app.post('/search')
-async def search_by_image(query: UploadFile):
+async def search_by_image(query: Union[str, UploadFile] = Form(...)):
     """
     search by image
     :param query: query image file
     :return:
     """
-    results = ise.search(query.file)
+    results = ise.search(path.join(IMAGE_PATH, f'{query}.jpg') if isinstance(query, str)
+                         else query.file)
     return {'code': 0, 'data': results}
 
 

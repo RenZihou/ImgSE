@@ -20,7 +20,18 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 
 ## Change Log 更新日志
 
-### v0.4
+### v1.0.0-alpha
+
+**Add**
+
+* 后端：以图搜图功能
+* 前端：以图搜图功能、相似图片推荐
+
+**Refactor**
+
+* 后端：重写搜索引擎框架以更好地复用代码
+
+### v0.4.0
 
 **Add**
 
@@ -31,14 +42,14 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 
 * 后端：搜索功能优化
 
-### v0.3
+### v0.3.0
 
 **Add**
 
 * 后端：大小（像素数）筛选功能
 * 前端：大小筛选、未找到图片的警告
 
-### v0.2
+### v0.2.0
 
 **Add**
 
@@ -49,7 +60,7 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 
 * 前端：水平居中展示
 
-### v0.1
+### v0.1.0
 
 **Add**
 
@@ -58,14 +69,12 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 
 ## Development Process 开发进度
 
-### 后端：搜索引擎
-
 - [x] 基本功能
     - [x] 文字-图片检索 (22/04/14)
 - [x] 辅助功能
     - [x] 尺寸筛选 (22/04/17)
     - [x] 色调筛选 (22/04/18)
     - [x] 标签筛选 (22/04/17)
-- [ ] 拓展功能
+- [x] 拓展功能
     - [x] 图片-图片检索 (22/04/19)
-    - [ ] 相似推荐
+    - [x] 相似推荐 (22/04/19)
