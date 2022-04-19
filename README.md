@@ -67,5 +67,5 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
     - [x] 色调筛选 (22/04/18)
     - [x] 标签筛选 (22/04/17)
 - [ ] 拓展功能
-    - [ ] 图片-图片检索
+    - [x] 图片-图片检索 (22/04/19)
     - [ ] 相似推荐

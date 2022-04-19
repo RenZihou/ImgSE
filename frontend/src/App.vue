@@ -3,9 +3,14 @@
     <div class="search-bar items-center">
       <q-field borderless class="search-input">
         <div class="col">
-          <q-input v-model="query" outlined clearable clear-icon="close" placeholder="search"
-                   @keydown.enter.prevent="search">
+          <q-input v-model="query" outlined clearable clear-icon="close" placeholder="search" ref="query_input"
+                   @keydown.enter="search" @focus="file = null">
+            <q-file outlined accept=".jpg,image/" ref="query_image" v-model="file" v-show="file"/>
+            <q-btn flat icon="image_search" @click="$refs.query_image.pickFiles()">
+              <q-tooltip>search by image</q-tooltip>
+            </q-btn>
             <q-btn flat icon="add">
+              <q-tooltip>add filters</q-tooltip>
               <q-menu>
                 <q-list bordered separator>
                   <q-item clickable v-ripple @click="tag_filter_show = true">
@@ -50,7 +55,9 @@
                 </q-list>
               </q-menu>
             </q-btn>
-            <q-btn flat icon="search" @click="search"/>
+            <q-btn flat icon="search" @click="search">
+              <q-tooltip>search</q-tooltip>
+            </q-btn>
           </q-input>
         </div>
       </q-field>
@@ -81,7 +88,7 @@
       </div>
       <template v-slot:loading>
         <div class="row justify-center q-my-md">
-          <q-spinner-dots color="primary" size="40px" />
+          <q-spinner-dots color="primary" size="40px"/>
         </div>
       </template>
     </q-infinite-scroll>
@@ -125,6 +132,7 @@ export default {
 
   methods: {
     search() {
+      this.continue_from = -1;
       const path = process.env.VUE_APP_BACKEND_URL + "/search";
       axios.get(path, {
         params: {
@@ -139,20 +147,39 @@ export default {
               this.gallery = resp.data.data;
               if (this.gallery.length === 0) {
                 this.noResultAlert();
-                this.continue_from = -1;
               } else {
                 await sleep(2000);  // wait for render to avoid immediate "load more"
                 this.continue_from = resp.data.continue_from;
               }
             } else {
               console.log(resp.status);
-              this.continue_from = -1;
             }
           })
           .catch(err => {
             console.log(err);
-            this.continue_from = -1;
           });
+    },
+    searchByImage() {
+      if (this.file === null) return;
+      this.$refs.query_input.blur();
+      this.query = '';
+      this.continue_from = -1;
+      const path = process.env.VUE_APP_BACKEND_URL + '/search';
+      const form_data = new FormData();
+      form_data.append('query', this.file);
+      axios.post(path, form_data)
+          .then(resp => {
+                if (resp.status === 200) {
+                  Array.from(resp.data.data).forEach(each => {
+                    each.expanded = false;
+                  });
+                  this.gallery = resp.data.data;
+                }
+              }
+          )
+          .catch(err => {
+            console.log(err);
+          })
     },
     loadMore(index, done) {
       if (this.continue_from === -1) {
@@ -222,11 +249,18 @@ export default {
           "#ffffff": "white", "#9e9e9e": "grey", "#000000": "black", "#5d4037": "brown"
         }[color_hex];
       }
+    },
+    "file": {
+      handler() {
+        this.searchByImage();
+      }
     }
   },
+
   data() {
     return {
       query: "",
+      file: null,
       new_tag: "",
       tags: [],
       pixels: [],
@@ -247,6 +281,10 @@ export default {
         $q.notify({message: "No Image Found", position: "center", color: "negative", icon: "error", timeout: 2000});
       }
     }
+  },
+
+  created() {
+    document.title = "ImgSE | Search Images";
   }
 }
 </script>
