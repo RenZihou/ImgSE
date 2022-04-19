@@ -5,59 +5,63 @@
         <div class="col">
           <q-input v-model="query" outlined clearable clear-icon="close" placeholder="search" ref="query_input"
                    @keydown.enter="search" @focus="file = null">
-            <q-file outlined accept=".jpg,image/" ref="query_image" v-model="file" v-show="file"/>
-            <q-btn flat icon="image_search" @click="$refs.query_image.pickFiles()">
-              <q-tooltip>search by image</q-tooltip>
-            </q-btn>
-            <q-btn flat icon="add">
-              <q-tooltip>add filters</q-tooltip>
-              <q-menu>
-                <q-list bordered separator>
-                  <q-item clickable v-ripple @click="tag_filter_show = true">
-                    <q-item-section>Tag Filter {{ tag_filter_desc }}</q-item-section>
-                  </q-item>
+            <template v-slot:prepend>
+              <q-file filled class="file-input" v-model="file" v-show="file"/>
+            </template>
+            <template v-slot:append>
+              <q-btn flat icon="image_search" @click="this.$refs.query_image.pickFiles()">
+                <q-tooltip>search by image</q-tooltip>
+              </q-btn>
+              <q-btn flat icon="add">
+                <q-tooltip>add filters</q-tooltip>
+                <q-menu>
+                  <q-list bordered separator>
+                    <q-item clickable v-ripple @click="tag_filter_show = true">
+                      <q-item-section>Tag Filter {{ tag_filter_desc }}</q-item-section>
+                    </q-item>
 
-                  <q-item clickable v-ripple>
-                    <q-item-section>Color Filter</q-item-section>
-                    <q-menu anchor="top left" self="top right">
-                      <q-color v-model="color_hex" no-header-tabs no-footer default-view="palette"
-                               :palette="['#f44336', '#ff9800', '#ffeb3b', '#4caf50',
+                    <q-item clickable v-ripple>
+                      <q-item-section>Color Filter</q-item-section>
+                      <q-menu anchor="top left" self="top right">
+                        <q-color v-model="color_hex" no-header-tabs no-footer default-view="palette"
+                                 :palette="['#f44336', '#ff9800', '#ffeb3b', '#4caf50',
                                  '#00bcd4', '#2196f3', '#9c27b0', '#e91e63',
                                  '#ffffff', '#9e9e9e', '#000000', '#5d4037']"/>
-                      <q-item clickable @click="color_hex = ''">
-                        <q-item-section>Disable Color Filter</q-item-section>
-                      </q-item>
-                    </q-menu>
-                  </q-item>
+                        <q-item clickable @click="color_hex = ''">
+                          <q-item-section>Disable Color Filter</q-item-section>
+                        </q-item>
+                      </q-menu>
+                    </q-item>
 
-                  <q-item clickable v-ripple>
-                    <q-item-section>Size Filter</q-item-section>
-                    <q-menu anchor="top left" self="top right">
-                      <q-list bordered separator>
-                        <q-item>
-                          <q-checkbox v-model="pixels" val="xs" label="extra small" size="xs"/>
-                        </q-item>
-                        <q-item>
-                          <q-checkbox v-model="pixels" val="s" label="small" size="xs"/>
-                        </q-item>
-                        <q-item>
-                          <q-checkbox v-model="pixels" val="m" label="medium" size="xs"/>
-                        </q-item>
-                        <q-item>
-                          <q-checkbox v-model="pixels" val="l" label="large" size="xs"/>
-                        </q-item>
-                        <q-item>
-                          <q-checkbox v-model="pixels" val="xl" label="extra large" size="xs"/>
-                        </q-item>
-                      </q-list>
-                    </q-menu>
-                  </q-item>
-                </q-list>
-              </q-menu>
-            </q-btn>
-            <q-btn flat icon="search" @click="search">
-              <q-tooltip>search</q-tooltip>
-            </q-btn>
+                    <q-item clickable v-ripple>
+                      <q-item-section>Size Filter</q-item-section>
+                      <q-menu anchor="top left" self="top right">
+                        <q-list bordered separator>
+                          <q-item>
+                            <q-checkbox v-model="pixels" val="xs" label="extra small" size="xs"/>
+                          </q-item>
+                          <q-item>
+                            <q-checkbox v-model="pixels" val="s" label="small" size="xs"/>
+                          </q-item>
+                          <q-item>
+                            <q-checkbox v-model="pixels" val="m" label="medium" size="xs"/>
+                          </q-item>
+                          <q-item>
+                            <q-checkbox v-model="pixels" val="l" label="large" size="xs"/>
+                          </q-item>
+                          <q-item>
+                            <q-checkbox v-model="pixels" val="xl" label="extra large" size="xs"/>
+                          </q-item>
+                        </q-list>
+                      </q-menu>
+                    </q-item>
+                  </q-list>
+                </q-menu>
+              </q-btn>
+              <q-btn flat icon="search" @click="search">
+                <q-tooltip>search</q-tooltip>
+              </q-btn>
+            </template>
           </q-input>
         </div>
       </q-field>
@@ -75,7 +79,9 @@
           <q-card-actions>
             <q-space/>
             <q-btn flat dense :icon="g.expanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'" color="grey"
-                   @click="g.expanded = !g.expanded"/>
+                   @click="g.expanded = !g.expanded">
+              <q-tooltip> {{ g.expanded ? "hide description" : "show description" }}</q-tooltip>
+            </q-btn>
           </q-card-actions>
 
           <q-slide-transition>
@@ -114,6 +120,9 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- this q-file is bounded to the one in search-input, used to evoke pickFiles() method -->
+    <q-file accept=".jpg,image/" ref="query_image" v-model="file" v-show="false"/>
   </div>
 </template>
 
