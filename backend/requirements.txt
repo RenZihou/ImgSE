@@ -1,5 +1,9 @@
-fastapi==0.75.1
-uvicorn==0.17.6
+fastapi~=0.75.1
+uvicorn~=0.17.6
 dill~=0.3.4
 rank_bm25~=0.2.2
 pillow~=9.1.0
+python-multipart~=0.0.5
+opencv-python~=4.5.5
+numpy~=1.22.3
+sklearn~=0.0

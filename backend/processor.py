@@ -2,6 +2,9 @@
 # -*- encoding: utf-8 -*-
 # @Author: RenZihou
 
+import cv2
+import numpy as np
+
 # credit: https://gist.github.com/sebleier/554280
 # set takes O(1) time for `in` operation
 STOP_WORDS = {
@@ -20,7 +23,6 @@ STOP_WORDS = {
     '*', '(', ')', '+', '=', '{', '}', '[', ']', '<', '>', '~', '`',
 }
 
-# credit: https://www.rapidtables.com/web/color/RGB_Color.html
 COLORS = {
     'red': (244, 67, 54),
     'orange': (255, 152, 0),
@@ -36,6 +38,8 @@ COLORS = {
     'brown': (121, 85, 72),
 }
 
+HSV_BINS = (12, 12, 4)
+
 
 def process_text(text: str) -> list:
     """
@@ -49,7 +53,7 @@ def process_text(text: str) -> list:
                        map(lambda w: w.lower(), text.split())))
 
 
-def process_image(image) -> tuple:
+def extract_image_info(image) -> tuple:
     """
     1. find pixels number
     2. find dominant color and classify it
@@ -65,3 +69,37 @@ def process_image(image) -> tuple:
         key=distance.get
     )
     return w * h, color
+
+
+# credit: https://github.com/sherlockchou86/cbir-image-search
+def extract_image_feature(image) -> np.array:
+    """
+    calculate image region based color histogram
+    :param image: PIL.Image object
+    :return:
+    """
+    features = np.array([])
+    try:
+        image_bgr = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2HSV)
+    except cv2.error:
+        return None
+    h, w = image_bgr.shape[:2]
+    ch, cw = h // 2, w // 2
+    # top-left, top-right, bottom-left, bottom-right regions
+    segments = [(0, cw, 0, ch), (cw, w, 0, ch), (cw, w, ch, h), (0, cw, ch, h)]
+    # central elliptical region
+    mask_e = np.zeros(image_bgr.shape[:2], dtype=np.uint8)
+    cv2.ellipse(mask_e, (cw, ch), (3 * w // 8, 3 * h // 8), 0, 0, 360, 255, -1)
+    for x1, x2, y1, y2 in segments:
+        # extract histogram for each corner region
+        mask = np.zeros(image_bgr.shape[:2], dtype=np.uint8)
+        cv2.rectangle(mask, (x1, y1), (x2, y2), 255, -1)
+        mask = cv2.subtract(mask, mask_e)
+        hist = cv2.calcHist((image_bgr,), (0, 1, 2), mask, HSV_BINS, (0, 180, 0, 256, 0, 256))
+        hist = cv2.normalize(hist, hist).flatten()
+        features = np.hstack((features, hist))
+    # extract histogram for central elliptical region
+    hist = cv2.calcHist((image_bgr,), (0, 1, 2), mask_e, HSV_BINS, (0, 180, 0, 256, 0, 256))
+    hist = cv2.normalize(hist, hist).flatten()
+    features = np.hstack((features, hist))
+    return features

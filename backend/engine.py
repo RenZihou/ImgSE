@@ -5,43 +5,22 @@
 from typing import Optional, Tuple
 
 import dill as pickle
+from PIL import Image
 
 from database import ImageDB
-from processor import process_text
-from settings import IMAGE_PIXELS_THRESHOLD, MAX_RESULT
+from processor import process_text, extract_image_feature
+from settings import IMAGE_PIXELS_THRESHOLD, MAX_RESULT, MAX_IMAGE_RESULT
 
 
 class SearchEngine:
-    """search engine"""
-
-    def __init__(self, bm25_pkl: str, tag_index_pkl: str):
-        with open(bm25_pkl, 'rb') as bm25, open(tag_index_pkl, 'rb') as ti:
-            self.bm25 = pickle.load(bm25)
+    """base search engine"""
+    def __init__(self, tag_index_pkl: str):
+        with open(tag_index_pkl, 'rb') as ti:
             self.tag_index = pickle.load(ti)
 
-    def search(self, query: str, /,
-               tags: Optional[list] = None, pixels: Optional[list] = None, color: str = '',
-               n: int = 20, continue_from: int = 0) -> Tuple[list, int]:
-        """
-        search query
-        :param query: query string
-        :param tags: tag list
-        :param pixels: pixels size list
-        :param color: color name
-        :param n: number of results
-        :param continue_from: continue from which bm25 result index
-        :return: list of image_id
-        """
-        if tags is None:
-            tags = []
-        words = process_text(query)
-        if len(words) == 0 and len(tags) == 0:
-            return [], 0
-        if query in self.tag_index.index and query not in tags:
-            tags.append(query)
-        results = self.bm25.get(words, n=MAX_RESULT)[continue_from:]
-        abstracts, count = self._abstract(results, tags=tags, pixels=pixels, color=color, n=n)
-        return abstracts, count + continue_from
+    def search(self, query, **kwargs):
+        """search by query"""
+        return NotImplementedError
 
     def _abstract(self, results: list, /,
                   tags: Optional[list] = None, pixels: Optional[list] = None, color: str = '',
@@ -51,7 +30,7 @@ class SearchEngine:
         :param results: image id list
         :return: abstract result
         """
-        tag_filter = set.intersection(*[set(self.tag_index.get(tag)) for tag in tags])\
+        tag_filter = set.intersection(*[set(self.tag_index.get(tag)) for tag in tags]) \
             if tags else None
         abstracts = []
         count = 0
@@ -84,3 +63,53 @@ class SearchEngine:
         return any([
             IMAGE_PIXELS_THRESHOLD[th][0] <= image_info['pixels'] < IMAGE_PIXELS_THRESHOLD[th][1]
             for th in pixels_threshold])
+
+
+class TextSearchEngine(SearchEngine):
+    """search engine (search by text)"""
+
+    def __init__(self, bm25_pkl: str, tag_index_pkl: str):
+        super().__init__(tag_index_pkl)
+        with open(bm25_pkl, 'rb') as bm25:
+            self.bm25 = pickle.load(bm25)
+
+    def search(self, query: str, /,
+               tags: Optional[list] = None, pixels: Optional[list] = None, color: str = '',
+               n: int = 20, continue_from: int = 0) -> Tuple[list, int]:
+        """
+        search query
+        :param query: query string
+        :param tags: tag list
+        :param pixels: pixels size list
+        :param color: color name
+        :param n: number of results
+        :param continue_from: continue from which bm25 result index
+        :return: list of image_id
+        """
+        if tags is None:
+            tags = []
+        words = process_text(query)
+        if len(words) == 0 and len(tags) == 0:
+            return [], 0
+        if query in self.tag_index.index and query not in tags:
+            tags.append(query)
+        results = self.bm25.get(words, n=MAX_RESULT)[continue_from:]
+        abstracts, count = self._abstract(results, tags=tags, pixels=pixels, color=color, n=n)
+        return abstracts, count + continue_from
+
+
+class ImageSearchEngine(SearchEngine):
+    """search engine (search by image)"""
+
+    def __init__(self, bt_pkl: str, tag_index_pkl: str):
+        super().__init__(tag_index_pkl)
+        with open(bt_pkl, 'rb') as bt:
+            self.ball_tree = pickle.load(bt)
+
+    def search(self, query, **kwargs) -> list:
+        """search by image"""
+        image = Image.open(query)
+        feature = extract_image_feature(image)
+        results = self.ball_tree.get(feature, n=MAX_IMAGE_RESULT)
+        abstracts, _ = self._abstract(results, **kwargs)
+        return abstracts

@@ -4,14 +4,15 @@
 
 from os import path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import FileResponse
 
-from settings import IMAGE_PATH, TAG_INDEX_PATH, BM25_PATH
-from engine import SearchEngine
+from engine import TextSearchEngine, ImageSearchEngine
+from settings import IMAGE_PATH, TAG_INDEX_PATH, BM25_PATH, BALL_TREE_PATH
 
 app = FastAPI()
-se = SearchEngine(BM25_PATH, TAG_INDEX_PATH)
+tse = TextSearchEngine(BM25_PATH, TAG_INDEX_PATH)
+ise = ImageSearchEngine(BALL_TREE_PATH, TAG_INDEX_PATH)
 
 
 @app.get('/search')
@@ -26,16 +27,27 @@ async def search(query: str = '', tags: str = '', pixels: str = '', color: str =
     :param continue_from: continue filter from which index of bm25 result
     :return:
     """
-    results, count = se.search(query,
-                               tags=tags.replace('+', ' ').split(',') if tags else None,
-                               pixels=pixels.split(',') if pixels else None,
-                               color=color,
-                               continue_from=continue_from if continue_from else 0)
+    results, count = tse.search(query,
+                                tags=tags.replace('+', ' ').split(',') if tags else None,
+                                pixels=pixels.split(',') if pixels else None,
+                                color=color,
+                                continue_from=continue_from if continue_from else 0)
     return {'code': 0, 'data': results, 'continue_from': count}
 
 
+@app.post('/search')
+async def search_by_image(query: UploadFile):
+    """
+    search by image
+    :param query: query image file
+    :return:
+    """
+    results = ise.search(query.file)
+    return {'code': 0, 'data': results}
+
+
 @app.get('/image/{image_id}')
-async def image(image_id: str):
+async def get_image(image_id: str):
     """
     get image by image id
     :param image_id: image id

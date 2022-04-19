@@ -6,12 +6,12 @@ import json
 from collections import defaultdict
 from os import path, listdir
 
-from index import IndexEngine, BM25Engine
-from processor import process_text, process_image
+from index import IndexEngine, BM25Engine, BallTreeEngine
+from processor import process_text, extract_image_info, extract_image_feature
 from database import ImageDB
 from PIL import Image
 
-from settings import BM25_PATH, TAG_INDEX_PATH
+from settings import BM25_PATH, TAG_INDEX_PATH, BALL_TREE_PATH
 
 
 def build_text(doc_path: str):
@@ -22,7 +22,7 @@ def build_text(doc_path: str):
             data = json.loads(line)
             bm25.add_doc(data['image_id'], process_text(data['caption']))
             db.set_desc(data['image_id'], desc=data['caption'])
-    bm25.parse_corpus().save(BM25_PATH)
+    bm25.build_index().save(BM25_PATH)
 
 
 def build_tag(tag_label_path: str, tag_desc_path: str):
@@ -46,13 +46,20 @@ def build_tag(tag_label_path: str, tag_desc_path: str):
 
 
 def build_image(image_path: str):
-    """save image info to database"""
+    """save image info to database and ball tree"""
+    bte = BallTreeEngine()
     with ImageDB() as db:
         for image_filename in listdir(image_path):
             image = Image.open(path.join(image_path, image_filename))
-            pixels, color = process_image(image)
+            pixels, color = extract_image_info(image)
             db.set_pixels(image_filename[:-4], pixels)  # add info of pixel size
             db.set_color(image_filename[:-4], color)  # add info of dominant color
+            feature = extract_image_feature(image)
+            if feature is None:
+                print(f'Error occurred when extracting feature of {image_filename}')
+                continue
+            bte.add_img(image_filename[:-4], feature)
+    bte.build_tree().save(BALL_TREE_PATH)
 
 
 if __name__ == '__main__':
