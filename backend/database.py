@@ -2,9 +2,9 @@
 # -*- encoding: utf-8 -*-
 # @Author: RenZihou
 
+import json
 import sqlite3
 from os import path
-import json
 
 from settings import DATABASE_PATH
 
@@ -18,6 +18,7 @@ class ImageDB(object):
         self.conn = sqlite3.connect(path.join(path.dirname(__file__), db))
         self.cur = self.conn.cursor()
         self.columns = ('image_id', 'desc', 'tags', 'pixels', 'color')
+        self._init_db()
 
     def __enter__(self):
         return self
@@ -85,3 +86,13 @@ class ImageDB(object):
             self.cur.execute('UPDATE info SET color = ? WHERE image_id = ?', (color, image_id))
         else:
             self.cur.execute('INSERT INTO info(image_id, color) VALUES (?, ?)', (image_id, color))
+
+    def _init_db(self):
+        """init database tables"""
+        self.cur.execute('CREATE TABLE IF NOT EXISTS info'
+                         '(image_id TEXT PRIMARY KEY NOT NULL,'
+                         'desc TEXT DEFAULT \'\', '
+                         'tags TEXT DEFAULT \'[]\','
+                         'pixels INTEGER DEFAULT 0,'
+                         'color TEXT DEFAULT \'\')')
+        self.conn.commit()
