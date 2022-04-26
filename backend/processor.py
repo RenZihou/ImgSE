@@ -38,7 +38,7 @@ COLORS = {
     'brown': (121, 85, 72),
 }
 
-HSV_BINS = (12, 12, 4)
+HSV_BINS = (12, 6, 4)
 
 
 def process_text(text: str) -> list:
@@ -74,7 +74,7 @@ def extract_image_info(image) -> tuple:
 # credit: https://github.com/sherlockchou86/cbir-image-search
 def extract_image_feature(image) -> np.array:
     """
-    calculate image region based color histogram
+    extract image region-based color histogram feature
     :param image: PIL.Image object
     :return:
     """

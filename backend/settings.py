@@ -5,7 +5,7 @@
 IMAGE_PATH = 'D:/storage/images/'
 BM25_PATH = 'C:/users/alex/projects/ImgSE/backend/data/bm25.pkl'
 TAG_INDEX_PATH = 'C:/users/alex/projects/ImgSE/backend/data/tag_index.pkl'
-BALL_TREE_PATH = 'C:/users/alex/projects/ImgSE/backend/data/ball_tree.pkl'
+BALL_TREE_PATH = 'C:/users/alex/projects/ImgSE/backend/data/bt_hist.pkl'
 DATABASE_PATH = 'C:/users/alex/projects/ImgSE/backend/data/info.sqlite'
 
 IMAGE_PIXELS_THRESHOLD = {

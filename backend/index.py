@@ -12,6 +12,7 @@ import numpy as np
 
 class IndexEngine:
     """(inverted) index engine"""
+
     def __init__(self):
         self.index = defaultdict(set)
 
@@ -32,6 +33,7 @@ class IndexEngine:
 
 class BM25Engine:
     """BM25 engine"""
+
     def __init__(self):
         self.bm25 = None
         self.doc_id = []
@@ -61,6 +63,7 @@ class BM25Engine:
 
 class BallTreeEngine:
     """ball tree"""
+
     def __init__(self):
         self.ball_tree = None
         self.img_id = []

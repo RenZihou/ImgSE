@@ -63,6 +63,6 @@ def build_image(image_path: str):
 
 
 if __name__ == '__main__':
-    build_text('D:/storage/meta/text-label.jsonl')
-    build_tag('D:/storage/meta/class-label.csv', 'D:/storage/meta/class-descriptions.csv')
-    # build_image('D:/storage/images')
+    # build_text('D:/storage/meta/text-label.jsonl')
+    # build_tag('D:/storage/meta/class-label.csv', 'D:/storage/meta/class-descriptions.csv')
+    build_image('D:/storage/images')

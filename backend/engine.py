@@ -14,6 +14,7 @@ from settings import IMAGE_PIXELS_THRESHOLD, MAX_RESULT, MAX_IMAGE_RESULT
 
 class SearchEngine:
     """base search engine"""
+
     def __init__(self, tag_index_pkl: str):
         with open(tag_index_pkl, 'rb') as ti:
             self.tag_index = pickle.load(ti)
