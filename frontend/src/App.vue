@@ -73,7 +73,7 @@
           <img :src="parseImgUrl(g.image_id)" alt="">
 
           <q-card-section class="q-pa-s q-gutter-xs image-tag">
-            <q-badge outline color="primary" v-for="t in g.tags" :key="t" :label="t"/>
+            <q-badge outline color="primary" v-for="t in g.tags" :key="t" :label="t" @click="searchByTag(t)"/>
           </q-card-section>
 
           <q-card-actions>
@@ -130,8 +130,8 @@
 </template>
 
 <script>
-import axios from 'axios';
-import {useQuasar} from 'quasar'
+import axios from "axios";
+import {useQuasar} from "quasar"
 
 function sleep(ms) {
   return new Promise((resolve) => {
@@ -140,16 +140,14 @@ function sleep(ms) {
 }
 
 export default {
-  name: 'MainLayout',
+  name: "MainLayout",
 
   methods: {
     search() {
       this.continue_from = -1;
       const path = process.env.VUE_APP_BACKEND_URL + "/search";
       axios.get(path, {
-        params: {
-          query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(","), color: this.color
-        }
+        params: {query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(","), color: this.color}
       })
           .then(async resp => {
             if (resp.status === 200) {
@@ -157,6 +155,7 @@ export default {
                 each.expanded = false;
               });
               this.gallery = resp.data.data;
+              window.scrollTo(0, 0);
               if (this.gallery.length === 0) {
                 this.noResultAlert();
               } else {
@@ -166,23 +165,28 @@ export default {
             }
           })
     },
+    searchByTag(query) {
+      this.query = "";
+      this.tags = [query];
+      this.file = null;
+      this.search();
+    },
     searchByImage(query) {
-      this.query = '';
+      this.query = "";
       this.continue_from = -1;
-      const path = process.env.VUE_APP_BACKEND_URL + '/search';
+      const path = process.env.VUE_APP_BACKEND_URL + "/search";
       const form_data = new FormData();
-      form_data.append('query', query);
+      form_data.append("query", query);
       axios.post(path, form_data)
           .then(resp => {
-                if (resp.status === 200) {
-                  Array.from(resp.data.data).forEach(each => {
-                    each.expanded = false;
-                  });
-                  this.gallery = resp.data.data;
-                  window.scrollTo(0, 0);
-                }
-              }
-          )
+            if (resp.status === 200) {
+              Array.from(resp.data.data).forEach(each => {
+                each.expanded = false;
+              });
+              this.gallery = resp.data.data;
+              window.scrollTo(0, 0);
+            }
+          })
     },
     loadMore(index, done) {
       if (this.continue_from === -1) {
@@ -191,7 +195,7 @@ export default {
       }
       const continue_from = this.continue_from;
       this.continue_from = -1;
-      const path = process.env.VUE_APP_BACKEND_URL + '/search';
+      const path = process.env.VUE_APP_BACKEND_URL + "/search";
       axios.get(path, {
         params: {
           query: this.query, tags: this.tags.join(","), pixels: this.pixels.join(","), color: this.color,

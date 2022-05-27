@@ -4,6 +4,7 @@
 
 from os import path
 from typing import Union
+from time import time
 
 from fastapi import FastAPI, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,12 +38,13 @@ async def search(query: str = '', tags: str = '', pixels: str = '', color: str =
     :param continue_from: continue filter from which index of bm25 result
     :return:
     """
+    st = time()
     results, count = tse.search(query,
                                 tags=tags.replace('+', ' ').split(',') if tags else None,
                                 pixels=pixels.split(',') if pixels else None,
                                 color=color,
                                 continue_from=continue_from if continue_from else 0)
-    return {'code': 0, 'data': results, 'continue_from': count}
+    return {'code': 0, 'data': results, 'continue_from': count, 'time': time() - st}
 
 
 @app.post('/search')
@@ -52,9 +54,10 @@ async def search_by_image(query: Union[str, UploadFile] = Form(...)):
     :param query: query image file
     :return:
     """
+    st = time()
     results = ise.search(path.join(IMAGE_PATH, f'{query}.jpg') if isinstance(query, str)
                          else query.file)
-    return {'code': 0, 'data': results}
+    return {'code': 0, 'data': results, 'time': time() - st}
 
 
 @app.get('/image/{image_id}')

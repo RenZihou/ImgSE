@@ -5,7 +5,6 @@
 import json
 from collections import defaultdict
 from os import path, listdir
-from multiprocessing import Pool
 
 from index import IndexEngine, BM25Engine, BallTreeEngine
 from processor import process_text, extract_image_info, extract_image_color_feature
@@ -49,9 +48,8 @@ def build_tag(tag_label_path: str, tag_desc_path: str):
 def build_image(image_path: str):
     """save image info to database and ball tree"""
     bte = BallTreeEngine()
-    with ImageDB() as db, Pool() as pool:
-        def build_single_image(image_filename: str):
-            """build single image"""
+    with ImageDB() as db:
+        for image_filename in listdir(image_path):
             image = Image.open(path.join(image_path, image_filename))
             pixels, color = extract_image_info(image)
             db.set_pixels(image_filename[:-4], pixels)  # add info of pixel size
@@ -59,11 +57,8 @@ def build_image(image_path: str):
             feature = extract_image_color_feature(image)
             if feature is None:
                 print(f'Error occurred when extracting feature of {image_filename}')
-                return
+                continue
             bte.add_img(image_filename[:-4], feature)
-
-        image_path_list = listdir(image_path)
-        pool.map(build_single_image, image_path_list)
     bte.build_tree().save(BALL_TREE_PATH)
 
 
