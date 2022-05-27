@@ -5,9 +5,10 @@
 import json
 from collections import defaultdict
 from os import path, listdir
+from multiprocessing import Pool
 
 from index import IndexEngine, BM25Engine, BallTreeEngine
-from processor import process_text, extract_image_info, extract_image_feature
+from processor import process_text, extract_image_info, extract_image_color_feature
 from database import ImageDB
 from PIL import Image
 
@@ -48,21 +49,25 @@ def build_tag(tag_label_path: str, tag_desc_path: str):
 def build_image(image_path: str):
     """save image info to database and ball tree"""
     bte = BallTreeEngine()
-    with ImageDB() as db:
-        for image_filename in listdir(image_path):
+    with ImageDB() as db, Pool() as pool:
+        def build_single_image(image_filename: str):
+            """build single image"""
             image = Image.open(path.join(image_path, image_filename))
             pixels, color = extract_image_info(image)
             db.set_pixels(image_filename[:-4], pixels)  # add info of pixel size
             db.set_color(image_filename[:-4], color)  # add info of dominant color
-            feature = extract_image_feature(image)
+            feature = extract_image_color_feature(image)
             if feature is None:
                 print(f'Error occurred when extracting feature of {image_filename}')
-                continue
+                return
             bte.add_img(image_filename[:-4], feature)
+
+        image_path_list = listdir(image_path)
+        pool.map(build_single_image, image_path_list)
     bte.build_tree().save(BALL_TREE_PATH)
 
 
 if __name__ == '__main__':
-    # build_text('D:/storage/meta/text-label.jsonl')
-    # build_tag('D:/storage/meta/class-label.csv', 'D:/storage/meta/class-descriptions.csv')
+    build_text('D:/storage/meta/text-label.jsonl')
+    build_tag('D:/storage/meta/class-label.csv', 'D:/storage/meta/class-descriptions.csv')
     build_image('D:/storage/images')

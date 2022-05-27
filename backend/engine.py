@@ -8,7 +8,7 @@ import dill as pickle
 from PIL import Image
 
 from database import ImageDB
-from processor import process_text, extract_image_feature
+from processor import process_text, extract_image_color_feature
 from settings import IMAGE_PIXELS_THRESHOLD, MAX_RESULT, MAX_IMAGE_RESULT
 
 
@@ -110,7 +110,7 @@ class ImageSearchEngine(SearchEngine):
     def search(self, query, **kwargs) -> list:
         """search by image"""
         image = Image.open(query)
-        feature = extract_image_feature(image)
+        feature = extract_image_color_feature(image)
         results = self.ball_tree.get(feature, n=MAX_IMAGE_RESULT)
         abstracts, _ = self._abstract(results, **kwargs)
         return abstracts

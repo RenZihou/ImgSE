@@ -5,40 +5,7 @@
 import cv2
 import numpy as np
 
-# credit: https://gist.github.com/sebleier/554280
-# set takes O(1) time for `in` operation
-STOP_WORDS = {
-    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself',
-    'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its',
-    'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom',
-    'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
-    'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but',
-    'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about',
-    'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to',
-    'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then',
-    'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few',
-    'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so',
-    'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now',
-    '.', ',', ':', ';', '?', '!', '-', '_', '"', '\'', '\\', '/', '|', '@', '#', '$', '%', '^', '&',
-    '*', '(', ')', '+', '=', '{', '}', '[', ']', '<', '>', '~', '`',
-}
-
-COLORS = {
-    'red': (244, 67, 54),
-    'orange': (255, 152, 0),
-    'yellow': (255, 235, 59),
-    'green': (76, 175, 80),
-    'teal': (0, 150, 136),
-    'blue': (63, 81, 181),
-    'purple': (156, 39, 176),
-    'pink': (233, 30, 99),
-    'white': (255, 255, 255),
-    'grey': (158, 158, 158),
-    'black': (0, 0, 0),
-    'brown': (121, 85, 72),
-}
-
-HSV_BINS = (12, 6, 4)
+from settings import STOP_WORDS, COLORS, HLS_BINS
 
 
 def process_text(text: str) -> list:
@@ -72,7 +39,7 @@ def extract_image_info(image) -> tuple:
 
 
 # credit: https://github.com/sherlockchou86/cbir-image-search
-def extract_image_feature(image) -> np.array:
+def extract_image_color_feature(image) -> np.array:
     """
     extract image region-based color histogram feature
     :param image: PIL.Image object
@@ -80,26 +47,26 @@ def extract_image_feature(image) -> np.array:
     """
     features = np.array([])
     try:
-        image_bgr = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2HSV)
+        image_hls = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2HLS)
     except cv2.error:
         return None
-    h, w = image_bgr.shape[:2]
+    h, w = image_hls.shape[:2]
     ch, cw = h // 2, w // 2
     # top-left, top-right, bottom-left, bottom-right regions
     segments = [(0, cw, 0, ch), (cw, w, 0, ch), (cw, w, ch, h), (0, cw, ch, h)]
     # central elliptical region
-    mask_e = np.zeros(image_bgr.shape[:2], dtype=np.uint8)
+    mask_e = np.zeros(image_hls.shape[:2], dtype=np.uint8)
     cv2.ellipse(mask_e, (cw, ch), (3 * w // 8, 3 * h // 8), 0, 0, 360, 255, -1)
     for x1, x2, y1, y2 in segments:
         # extract histogram for each corner region
-        mask = np.zeros(image_bgr.shape[:2], dtype=np.uint8)
+        mask = np.zeros(image_hls.shape[:2], dtype=np.uint8)
         cv2.rectangle(mask, (x1, y1), (x2, y2), 255, -1)
         mask = cv2.subtract(mask, mask_e)
-        hist = cv2.calcHist((image_bgr,), (0, 1, 2), mask, HSV_BINS, (0, 180, 0, 256, 0, 256))
+        hist = cv2.calcHist((image_hls,), (0, 1, 2), mask, HLS_BINS, (0, 180, 0, 255, 0, 255))
         hist = cv2.normalize(hist, hist).flatten()
         features = np.hstack((features, hist))
     # extract histogram for central elliptical region
-    hist = cv2.calcHist((image_bgr,), (0, 1, 2), mask_e, HSV_BINS, (0, 180, 0, 256, 0, 256))
+    hist = cv2.calcHist((image_hls,), (0, 1, 2), mask_e, HLS_BINS, (0, 180, 0, 255, 0, 255))
     hist = cv2.normalize(hist, hist).flatten()
     features = np.hstack((features, hist))
     return features
