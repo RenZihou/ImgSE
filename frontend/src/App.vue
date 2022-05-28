@@ -209,7 +209,7 @@ export default {
               });
               this.gallery.push(...resp.data.data);
               await sleep(2000);  // wait for render to avoid immediate "load more"
-              if (resp.data.data.length >= 0) {
+              if (resp.data.data.length > 0) {
                 this.continue_from = resp.data.continue_from;
               }
             }
