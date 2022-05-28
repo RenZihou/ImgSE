@@ -2,10 +2,15 @@
 # -*- encoding: utf-8 -*-
 # @Author: RenZihou
 
+# your image folder
 IMAGE_PATH = 'D:/storage/images/'
+# your bm25 model path (save & load)
 BM25_PATH = 'C:/users/alex/projects/ImgSE/backend/data/bm25.pkl'
+# your tag index path (save & load)
 TAG_INDEX_PATH = 'C:/users/alex/projects/ImgSE/backend/data/tag_index.pkl'
+# your image-feature-vector ball tree path (save & load)
 BALL_TREE_PATH = 'C:/users/alex/projects/ImgSE/backend/data/bt_hist.pkl'
+# your database path (save & load)
 DATABASE_PATH = 'C:/users/alex/projects/ImgSE/backend/data/info.sqlite'
 
 IMAGE_PIXELS_THRESHOLD = {

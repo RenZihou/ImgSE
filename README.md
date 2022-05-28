@@ -13,10 +13,53 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 
 使用的数据集为：
 
-* [谷歌开放数据集](https://github.com/cvdfoundation/open-images-dataset) - 用于本项目中文本搜图功能实现；
-  由于仅是 demo，本项目只使用了一部分数据。
+* [谷歌开放数据集](https://github.com/cvdfoundation/open-images-dataset) - 用于本项目中文本搜图功能实现；由于仅是 demo，本项目只使用了一部分数据。
+
+## Usage 快速运行
+
+### 配置环境
+
+```bash
+cd backend
+pip3 install -r requirements.txt
+cd ../frontend
+npm install
+```
+
+### 建库
+
+1. 修改`backend/settings.py`中的各项路径（`*_PATH`设置项）
+2. 运行`python3 backend/setup.py`
+
+### 启动后端（服务端）
+
+```bash
+cd backend
+python3 -m uvicorn main:app --reload
+```
+
+### 启动前端（浏览器端）
+
+```bash
+cd frontend
+npm run serve
+```
 
 ## Change Log 更新日志
+
+### v1.1.0
+
+**Add**
+
+* 前端：快捷添加标签（标签搜索）
+
+**Fix**
+
+* 前端：修复“即便没有新图片了，也会不断尝试拉取更多”的问题
+
+**Technical Change**
+
+* 后端：将计算颜色直方图所用的HSV编码改为HSL编码
 
 ### v1.0.0-alpha
 
@@ -25,7 +68,7 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 * 后端：以图搜图功能
 * 前端：以图搜图功能、相似图片推荐
 
-**Refactor**
+**Technical Change**
 
 * 后端：重写搜索引擎框架以更好地复用代码
 
@@ -36,7 +79,7 @@ This is my final project of SEARCH ENGINE course (40240762) in Tsinghua Universi
 * 后端：色调筛选功能、继续加载
 * 前端：色调筛选、无限滚动
 
-**Optimize**
+**Technical Change**
 
 * 后端：搜索功能优化
 
