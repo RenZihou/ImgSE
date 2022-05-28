@@ -166,8 +166,8 @@ export default {
           })
     },
     searchByTag(query) {
-      this.query = "";
-      this.tags = [query];
+      this.tags.push(query);
+      this.tag_filter_desc = "(" + this.tags.length + " tags applied)";
       this.file = null;
       this.search();
     },
